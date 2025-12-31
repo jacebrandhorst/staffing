@@ -1,0 +1,991 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Church Ministry Staffing Calculator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        header {
+            background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        h1 {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+        
+        .content {
+            display: grid;
+            grid-template-columns: 380px 1fr;
+            gap: 30px;
+            padding: 30px;
+        }
+        
+        .sliders-section {
+            background: #f9fafb;
+            padding: 25px;
+            border-radius: 12px;
+            height: fit-content;
+        }
+        
+        h2 {
+            color: #1f2937;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+        
+        .slider-group {
+            margin-bottom: 25px;
+        }
+        
+        label {
+            display: block;
+            color: #374151;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 0.95em;
+        }
+        
+        .value-display {
+            float: right;
+            color: #111827;
+            font-weight: bold;
+        }
+        
+        input[type="range"] {
+            width: 100%;
+            height: 8px;
+            border-radius: 5px;
+            background: #e5e7eb;
+            outline: none;
+            -webkit-appearance: none;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #374151;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb:hover {
+            background: #1f2937;
+            transform: scale(1.2);
+        }
+        
+        input[type="range"]::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #374151;
+            cursor: pointer;
+            border: none;
+        }
+        
+        .chart-section {
+            background: #f9fafb;
+            padding: 25px;
+            border-radius: 12px;
+        }
+        
+        .chart-wrapper {
+            background: white;
+            border-radius: 8px;
+            padding: 0;
+            margin-top: 20px;
+            height: 600px;
+            position: relative;
+            overflow: hidden;
+            border: 2px solid #e5e7eb;
+        }
+        
+        .chart-controls {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 10;
+            display: flex;
+            gap: 8px;
+            background: white;
+            padding: 8px;
+            border-radius: 6px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .chart-controls button {
+            padding: 8px 12px;
+            background: #374151;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        
+        .chart-controls button:hover {
+            background: #1f2937;
+        }
+        
+        #orgChart {
+            width: 100%;
+            height: 100%;
+            cursor: grab;
+        }
+        
+        #orgChart:active {
+            cursor: grabbing;
+        }
+        
+        .summary {
+            background: linear-gradient(135deg, #374151 0%, #1f2937 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+            text-align: center;
+        }
+        
+        .summary h3 {
+            margin-bottom: 10px;
+        }
+        
+        .summary-stats {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 15px;
+        }
+        
+        .stat {
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 2em;
+            font-weight: bold;
+        }
+        
+        .stat-label {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+        
+        @media (max-width: 1200px) {
+            .content {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>⛪ Church Ministry Staffing Calculator</h1>
+            <p>Adjust attendance numbers to see recommended staffing levels based on industry benchmarks</p>
+        </header>
+        
+        <div class="content">
+            <div class="sliders-section">
+                <h2>Church Metrics</h2>
+                
+                <div class="slider-group">
+                    <label>
+                        Average Weekly Attendance
+                        <span class="value-display" id="awaValue">500</span>
+                    </label>
+                    <input type="range" id="awa" min="0" max="2000" value="500" step="25">
+                </div>
+                
+                <div class="slider-group">
+                    <label>
+                        Kids Ministry (Birth-5th)
+                        <span class="value-display" id="kidsValue">125</span>
+                    </label>
+                    <input type="range" id="kids" min="0" max="800" value="125" step="10">
+                </div>
+                
+                <div class="slider-group">
+                    <label>
+                        Students (6th-12th)
+                        <span class="value-display" id="studentsValue">75</span>
+                    </label>
+                    <input type="range" id="students" min="0" max="500" value="75" step="10">
+                </div>
+                
+                <div class="slider-group">
+                    <label>
+                        Young Adults
+                        <span class="value-display" id="youngAdultValue">50</span>
+                    </label>
+                    <input type="range" id="youngAdult" min="0" max="300" value="50" step="10">
+                </div>
+                
+                <div class="slider-group">
+                    <label>
+                        Active Community Groups
+                        <span class="value-display" id="groupsValue">40</span>
+                    </label>
+                    <input type="range" id="groups" min="0" max="200" value="40" step="5">
+                </div>
+                
+                <div class="slider-group">
+                    <label>
+                        Active Studies (per season)
+                        <span class="value-display" id="studiesValue">5</span>
+                    </label>
+                    <input type="range" id="studies" min="0" max="30" value="5" step="1">
+                </div>
+                
+                <div class="slider-group">
+                    <label>
+                        Weekend Services
+                        <span class="value-display" id="servicesValue">2</span>
+                    </label>
+                    <input type="range" id="services" min="1" max="8" value="2" step="1">
+                </div>
+                
+                <div class="slider-group">
+                    <label>
+                        Active Care Cases
+                        <span class="value-display" id="careValue">30</span>
+                    </label>
+                    <input type="range" id="care" min="0" max="200" value="30" step="5">
+                </div>
+                
+                <div class="slider-group">
+                    <label>
+                        Monthly First-Time Guests
+                        <span class="value-display" id="guestsValue">75</span>
+                    </label>
+                    <input type="range" id="guests" min="0" max="400" value="75" step="10">
+                </div>
+                
+                <div class="slider-group">
+                    <label>
+                        City Hope Monthly Guests
+                        <span class="value-display" id="cityHopeValue">50</span>
+                    </label>
+                    <input type="range" id="cityHope" min="0" max="500" value="50" step="10">
+                </div>
+                
+                <div class="summary">
+                    <h3>Staffing Summary</h3>
+                    <div class="summary-stats">
+                        <div class="stat">
+                            <div class="stat-value" id="totalFTE">0</div>
+                            <div class="stat-label">Full-Time</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-value" id="totalPTE">0</div>
+                            <div class="stat-label">Part-Time</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-value" id="totalStaff">0</div>
+                            <div class="stat-label">Total Staff</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="chart-section">
+                <h2>Organization Chart</h2>
+                <div class="chart-wrapper">
+                    <div class="chart-controls">
+                        <button id="zoomIn">Zoom In</button>
+                        <button id="zoomOut">Zoom Out</button>
+                        <button id="resetView">Reset</button>
+                    </div>
+                    <svg id="orgChart"></svg>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const sliders = {
+            awa: document.getElementById('awa'),
+            kids: document.getElementById('kids'),
+            students: document.getElementById('students'),
+            youngAdult: document.getElementById('youngAdult'),
+            groups: document.getElementById('groups'),
+            studies: document.getElementById('studies'),
+            services: document.getElementById('services'),
+            care: document.getElementById('care'),
+            guests: document.getElementById('guests'),
+            cityHope: document.getElementById('cityHope')
+        };
+        
+        const values = {
+            awa: document.getElementById('awaValue'),
+            kids: document.getElementById('kidsValue'),
+            students: document.getElementById('studentsValue'),
+            youngAdult: document.getElementById('youngAdultValue'),
+            groups: document.getElementById('groupsValue'),
+            studies: document.getElementById('studiesValue'),
+            services: document.getElementById('servicesValue'),
+            care: document.getElementById('careValue'),
+            guests: document.getElementById('guestsValue'),
+            cityHope: document.getElementById('cityHopeValue')
+        };
+        
+        function calculateStaffing(metrics) {
+            const positions = [];
+            
+            // Senior Pastor (always)
+            positions.push({
+                id: 'senior-pastor',
+                title: 'Senior Pastor',
+                type: 'FTE',
+                ratio: 'Leadership',
+                level: 0,
+                parent: null
+            });
+            
+            // Executive Pastor (800-1200 AWA)
+            if (metrics.awa >= 800) {
+                positions.push({
+                    id: 'exec-pastor',
+                    title: 'Executive Pastor',
+                    type: 'FTE',
+                    ratio: `${metrics.awa} AWA`,
+                    level: 1,
+                    parent: 'senior-pastor'
+                });
+            }
+            
+            // Kids Ministry: 1 FTE per 125-150 kids
+            if (metrics.kids > 0) {
+                if (metrics.kids >= 300) {
+                    positions.push({
+                        id: 'kids-pastor',
+                        title: 'Kids Pastor',
+                        type: 'FTE',
+                        ratio: `${metrics.kids} kids`,
+                        level: 1,
+                        parent: 'senior-pastor'
+                    });
+                    
+                    const coordinatorCount = Math.floor((metrics.kids - 150) / 150);
+                    for (let i = 0; i < coordinatorCount; i++) {
+                        positions.push({
+                            id: `kids-coord-${i}`,
+                            title: 'Kids Coordinator',
+                            type: 'FTE',
+                            ratio: '~150 kids',
+                            level: 2,
+                            parent: 'kids-pastor'
+                        });
+                    }
+                } else if (metrics.kids >= 150) {
+                    positions.push({
+                        id: 'kids-director',
+                        title: 'Kids Director',
+                        type: 'FTE',
+                        ratio: `${metrics.kids} kids`,
+                        level: 1,
+                        parent: 'senior-pastor'
+                    });
+                    if (metrics.kids > 225) {
+                        positions.push({
+                            id: 'kids-coord',
+                            title: 'Kids Coordinator',
+                            type: metrics.kids > 250 ? 'FTE' : 'PTE',
+                            ratio: '~100 kids',
+                            level: 2,
+                            parent: 'kids-director'
+                        });
+                    }
+                } else {
+                    positions.push({
+                        id: 'kids-director',
+                        title: 'Kids Director',
+                        type: 'FTE',
+                        ratio: `${metrics.kids} kids`,
+                        level: 1,
+                        parent: 'senior-pastor'
+                    });
+                }
+            }
+            
+            // Students: 1 FTE per 100-125 students
+            if (metrics.students > 0) {
+                if (metrics.students >= 150) {
+                    positions.push({
+                        id: 'student-pastor',
+                        title: 'Student Pastor',
+                        type: 'FTE',
+                        ratio: `${metrics.students} students`,
+                        level: 1,
+                        parent: 'senior-pastor'
+                    });
+                    positions.push({
+                        id: 'student-assoc',
+                        title: 'Associate Director',
+                        type: 'FTE',
+                        ratio: 'Support',
+                        level: 2,
+                        parent: 'student-pastor'
+                    });
+                } else if (metrics.students >= 75) {
+                    positions.push({
+                        id: 'student-pastor',
+                        title: 'Student Pastor',
+                        type: 'FTE',
+                        ratio: `${metrics.students} students`,
+                        level: 1,
+                        parent: 'senior-pastor'
+                    });
+                } else {
+                    positions.push({
+                        id: 'student-director',
+                        title: 'Student Director',
+                        type: 'PTE',
+                        ratio: `${metrics.students} students`,
+                        level: 1,
+                        parent: 'senior-pastor'
+                    });
+                }
+            }
+            
+            // Young Adults: 1 FTE per 75-100 YA
+            if (metrics.youngAdult >= 100) {
+                positions.push({
+                    id: 'ya-pastor',
+                    title: 'Young Adult Pastor',
+                    type: 'FTE',
+                    ratio: `${metrics.youngAdult} YA`,
+                    level: 1,
+                    parent: 'senior-pastor'
+                });
+                if (metrics.youngAdult >= 150) {
+                    positions.push({
+                        id: 'ya-coord',
+                        title: 'YA Coordinator',
+                        type: 'PTE',
+                        ratio: 'Groups',
+                        level: 2,
+                        parent: 'ya-pastor'
+                    });
+                }
+            } else if (metrics.youngAdult >= 50) {
+                positions.push({
+                    id: 'ya-director',
+                    title: 'YA Director',
+                    type: 'FTE',
+                    ratio: `${metrics.youngAdult} YA`,
+                    level: 1,
+                    parent: 'senior-pastor'
+                });
+            } else if (metrics.youngAdult >= 25) {
+                positions.push({
+                    id: 'ya-coord',
+                    title: 'YA Coordinator',
+                    type: 'PTE',
+                    ratio: `${metrics.youngAdult} YA`,
+                    level: 1,
+                    parent: 'senior-pastor'
+                });
+            }
+            
+            // Groups: 1 FTE per 50-60 groups
+            if (metrics.groups >= 75) {
+                positions.push({
+                    id: 'groups-director',
+                    title: 'Groups Director',
+                    type: 'FTE',
+                    ratio: `${metrics.groups} groups`,
+                    level: 1,
+                    parent: 'senior-pastor'
+                });
+                if (metrics.groups >= 100) {
+                    positions.push({
+                        id: 'groups-coach',
+                        title: 'Groups Coordinator',
+                        type: 'FTE',
+                        ratio: 'Coaching',
+                        level: 2,
+                        parent: 'groups-director'
+                    });
+                }
+            } else if (metrics.groups >= 30) {
+                positions.push({
+                    id: 'groups-director',
+                    title: 'Groups Director',
+                    type: 'FTE',
+                    ratio: `${metrics.groups} groups`,
+                    level: 1,
+                    parent: 'senior-pastor'
+                });
+            } else if (metrics.groups >= 15) {
+                positions.push({
+                    id: 'groups-coord',
+                    title: 'Groups Coordinator',
+                    type: 'PTE',
+                    ratio: `${metrics.groups} groups`,
+                    level: 1,
+                    parent: 'senior-pastor'
+                });
+            }
+            
+            // Studies: 1 FTE per 8-12 active studies
+            if (metrics.studies >= 12) {
+                positions.push({
+                    id: 'studies-director',
+                    title: 'Studies Director',
+                    type: 'FTE',
+                    ratio: `${metrics.studies} studies`,
+                    level: 1,
+                    parent: 'senior-pastor'
+                });
+            } else if (metrics.studies >= 5) {
+                positions.push({
+                    id: 'studies-coord',
+                    title: 'Studies Coordinator',
+                    type: 'PTE',
+                    ratio: `${metrics.studies} studies`,
+                    level: 1,
+                    parent: 'senior-pastor'
+                });
+            }
+            
+            // Worship: 1 FTE per 2-3 services
+            if (metrics.services >= 3) {
+                positions.push({
+                    id: 'worship-pastor',
+                    title: 'Worship Pastor',
+                    type: 'FTE',
+                    ratio: `${metrics.services} services`,
+                    level: 1,
+                    parent: 'senior-pastor'
+                });
+                if (metrics.services >= 5) {
+                    positions.push({
+                        id: 'worship-assoc',
+                        title: 'Associate Director',
+                        type: metrics.services >= 6 ? 'FTE' : 'PTE',
+                        ratio: 'Support',
+                        level: 2,
+                        parent: 'worship-pastor'
+                    });
+                }
+            } else if (metrics.services >= 1) {
+                positions.push({
+                    id: 'worship-director',
+                    title: 'Worship Director',
+                    type: 'FTE',
+                    ratio: `${metrics.services} services`,
+                    level: 1,
+                    parent: 'senior-pastor'
+                });
+            }
+            
+            // Care: 1 FTE per 50-60 active cases
+            if (metrics.care >= 75) {
+                positions.push({
+                    id: 'care-pastor',
+                    title: 'Care Pastor',
+                    type: 'FTE',
+                    ratio: `${metrics.care} cases`,
+                    level: 1,
+                    parent: 'senior-pastor'
+                });
+                positions.push({
+                    id: 'care-coord',
+                    title: 'Care Coordinator',
+                    type: 'FTE',
+                    ratio: 'Support',
+                    level: 2,
+                    parent: 'care-pastor'
+                });
+            } else if (metrics.care >= 25) {
+                positions.push({
+                    id: 'care-pastor',
+                    title: 'Care Pastor',
+                    type: 'FTE',
+                    ratio: `${metrics.care} cases`,
+                    level: 1,
+                    parent: 'senior-pastor'
+                });
+            } else if (metrics.care >= 10) {
+                positions.push({
+                    id: 'care-coord',
+                    title: 'Care Coordinator',
+                    type: 'PTE',
+                    ratio: `${metrics.care} cases`,
+                    level: 1,
+                    parent: 'senior-pastor'
+                });
+            }
+            
+            // Assimilation: 1 FTE per 150-200 monthly guests
+            if (metrics.guests >= 150) {
+                positions.push({
+                    id: 'assim-director',
+                    title: 'Assimilation Director',
+                    type: 'FTE',
+                    ratio: `${metrics.guests} guests/mo`,
+                    level: 1,
+                    parent: 'senior-pastor'
+                });
+            } else if (metrics.guests >= 50) {
+                positions.push({
+                    id: 'assim-coord',
+                    title: 'Assimilation Coordinator',
+                    type: 'PTE',
+                    ratio: `${metrics.guests} guests/mo`,
+                    level: 1,
+                    parent: 'senior-pastor'
+                });
+            }
+            
+            // Production: 1 FTE per 2 venues or 3-4 services
+            if (metrics.services >= 3) {
+                positions.push({
+                    id: 'prod-director',
+                    title: 'Production Director',
+                    type: 'FTE',
+                    ratio: `${metrics.services} services`,
+                    level: 1,
+                    parent: 'senior-pastor'
+                });
+            } else if (metrics.services >= 2) {
+                positions.push({
+                    id: 'prod-coord',
+                    title: 'Production Coordinator',
+                    type: 'PTE',
+                    ratio: `${metrics.services} services`,
+                    level: 1,
+                    parent: 'senior-pastor'
+                });
+            }
+            
+            // City Hope (Compassion Ministry): estimate 1 FTE per 150-200 monthly guests
+            if (metrics.cityHope >= 200) {
+                positions.push({
+                    id: 'cityhope-exec',
+                    title: 'Executive Director, City Hope',
+                    type: 'FTE',
+                    ratio: `${metrics.cityHope} guests/mo`,
+                    level: 1,
+                    parent: 'senior-pastor'
+                });
+                positions.push({
+                    id: 'cityhope-coord',
+                    title: 'Coordinator, City Hope',
+                    type: 'FTE',
+                    ratio: 'Operations',
+                    level: 2,
+                    parent: 'cityhope-exec'
+                });
+            } else if (metrics.cityHope >= 100) {
+                positions.push({
+                    id: 'cityhope-director',
+                    title: 'Director, City Hope',
+                    type: 'FTE',
+                    ratio: `${metrics.cityHope} guests/mo`,
+                    level: 1,
+                    parent: 'senior-pastor'
+                });
+            } else if (metrics.cityHope >= 50) {
+                positions.push({
+                    id: 'cityhope-coord',
+                    title: 'Coordinator, City Hope',
+                    type: 'PTE',
+                    ratio: `${metrics.cityHope} guests/mo`,
+                    level: 1,
+                    parent: 'senior-pastor'
+                });
+            }
+            
+            // Administration: 1 admin FTE per 7-10 staff
+            const estimatedStaff = positions.length;
+            if (estimatedStaff >= 16) {
+                positions.push({
+                    id: 'admin-exec',
+                    title: 'Executive Director',
+                    type: 'FTE',
+                    ratio: `${estimatedStaff} staff`,
+                    level: 1,
+                    parent: 'senior-pastor'
+                });
+            } else if (estimatedStaff >= 6) {
+                positions.push({
+                    id: 'admin-coord',
+                    title: 'Admin Coordinator',
+                    type: 'FTE',
+                    ratio: `${estimatedStaff} staff`,
+                    level: 1,
+                    parent: 'senior-pastor'
+                });
+            } else if (estimatedStaff >= 3) {
+                positions.push({
+                    id: 'admin',
+                    title: 'Admin',
+                    type: 'PTE',
+                    ratio: `${estimatedStaff} staff`,
+                    level: 1,
+                    parent: 'senior-pastor'
+                });
+            }
+            
+            return positions;
+        }
+        
+        let chartScale = 1;
+        let chartTranslateX = 0;
+        let chartTranslateY = 0;
+        let isDragging = false;
+        let startX = 0;
+        let startY = 0;
+        
+        function drawOrgChart(positions) {
+            const svg = document.getElementById('orgChart');
+            const wrapper = svg.parentElement;
+            
+            const nodeWidth = 180;
+            const nodeHeight = 90;
+            const levelHeight = 160;
+            const horizontalSpacing = 60;
+            
+            // Group by level
+            const levels = {};
+            positions.forEach(pos => {
+                if (!levels[pos.level]) levels[pos.level] = [];
+                levels[pos.level].push(pos);
+            });
+            
+            const maxNodesPerLevel = Math.max(...Object.values(levels).map(l => l.length));
+            const totalWidth = Math.max(1200, maxNodesPerLevel * (nodeWidth + horizontalSpacing) + 200);
+            const totalHeight = Object.keys(levels).length * levelHeight + 200;
+            
+            svg.innerHTML = '';
+            svg.setAttribute('width', totalWidth);
+            svg.setAttribute('height', totalHeight);
+            svg.setAttribute('viewBox', `0 0 ${totalWidth} ${totalHeight}`);
+            
+            // Create main group for transformations
+            const mainGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+            mainGroup.setAttribute('id', 'mainGroup');
+            svg.appendChild(mainGroup);
+            
+            // Calculate positions
+            const nodePositions = {};
+            Object.keys(levels).forEach(level => {
+                const levelNodes = levels[level];
+                const levelWidth = levelNodes.length * (nodeWidth + horizontalSpacing);
+                const startX = (totalWidth - levelWidth) / 2 + nodeWidth / 2;
+                
+                levelNodes.forEach((node, i) => {
+                    nodePositions[node.id] = {
+                        x: startX + i * (nodeWidth + horizontalSpacing),
+                        y: 100 + parseInt(level) * levelHeight,
+                        node: node
+                    };
+                });
+            });
+            
+            // Draw connections first (so they appear behind nodes)
+            positions.forEach(pos => {
+                if (pos.parent && nodePositions[pos.parent]) {
+                    const parent = nodePositions[pos.parent];
+                    const child = nodePositions[pos.id];
+                    
+                    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                    const startY = parent.y + nodeHeight / 2;
+                    const endY = child.y - nodeHeight / 2;
+                    const midY = (startY + endY) / 2;
+                    
+                    const d = `M ${parent.x} ${startY} 
+                               L ${parent.x} ${midY} 
+                               L ${child.x} ${midY} 
+                               L ${child.x} ${endY}`;
+                    
+                    path.setAttribute('d', d);
+                    path.setAttribute('stroke', '#9ca3af');
+                    path.setAttribute('stroke-width', '2');
+                    path.setAttribute('fill', 'none');
+                    mainGroup.appendChild(path);
+                }
+            });
+            
+            // Draw nodes
+            Object.values(nodePositions).forEach(({x, y, node}) => {
+                const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                
+                const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                rect.setAttribute('x', x - nodeWidth / 2);
+                rect.setAttribute('y', y - nodeHeight / 2);
+                rect.setAttribute('width', nodeWidth);
+                rect.setAttribute('height', nodeHeight);
+                rect.setAttribute('rx', '8');
+                rect.setAttribute('fill', node.level === 0 ? '#1f2937' : '#f3f4f6');
+                rect.setAttribute('stroke', '#4b5563');
+                rect.setAttribute('stroke-width', '2.5');
+                g.appendChild(rect);
+                
+                const title = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                title.setAttribute('x', x);
+                title.setAttribute('y', y - 15);
+                title.setAttribute('text-anchor', 'middle');
+                title.setAttribute('font-size', '13');
+                title.setAttribute('font-weight', '700');
+                title.setAttribute('fill', node.level === 0 ? '#ffffff' : '#1f2937');
+                title.textContent = node.title;
+                g.appendChild(title);
+                
+                const badge = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                badge.setAttribute('x', x);
+                badge.setAttribute('y', y + 5);
+                badge.setAttribute('text-anchor', 'middle');
+                badge.setAttribute('font-size', '11');
+                badge.setAttribute('font-weight', '700');
+                badge.setAttribute('fill', node.type === 'FTE' ? '#059669' : '#2563eb');
+                badge.textContent = node.type;
+                g.appendChild(badge);
+                
+                const ratio = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                ratio.setAttribute('x', x);
+                ratio.setAttribute('y', y + 23);
+                ratio.setAttribute('text-anchor', 'middle');
+                ratio.setAttribute('font-size', '10');
+                ratio.setAttribute('fill', node.level === 0 ? '#d1d5db' : '#6b7280');
+                ratio.textContent = node.ratio;
+                g.appendChild(ratio);
+                
+                mainGroup.appendChild(g);
+            });
+            
+            updateTransform();
+        }
+        
+        function updateTransform() {
+            const mainGroup = document.getElementById('mainGroup');
+            if (mainGroup) {
+                mainGroup.setAttribute('transform', 
+                    `translate(${chartTranslateX}, ${chartTranslateY}) scale(${chartScale})`);
+            }
+        }
+        
+        function setupChartInteraction() {
+            const svg = document.getElementById('orgChart');
+            const wrapper = svg.parentElement;
+            
+            // Pan functionality
+            svg.addEventListener('mousedown', (e) => {
+                isDragging = true;
+                startX = e.clientX - chartTranslateX;
+                startY = e.clientY - chartTranslateY;
+            });
+            
+            svg.addEventListener('mousemove', (e) => {
+                if (isDragging) {
+                    chartTranslateX = e.clientX - startX;
+                    chartTranslateY = e.clientY - startY;
+                    updateTransform();
+                }
+            });
+            
+            svg.addEventListener('mouseup', () => {
+                isDragging = false;
+            });
+            
+            svg.addEventListener('mouseleave', () => {
+                isDragging = false;
+            });
+            
+            // Zoom buttons
+            document.getElementById('zoomIn').addEventListener('click', () => {
+                chartScale = Math.min(chartScale * 1.2, 3);
+                updateTransform();
+            });
+            
+            document.getElementById('zoomOut').addEventListener('click', () => {
+                chartScale = Math.max(chartScale / 1.2, 0.3);
+                updateTransform();
+            });
+            
+            document.getElementById('resetView').addEventListener('click', () => {
+                chartScale = 1;
+                chartTranslateX = 0;
+                chartTranslateY = 0;
+                updateTransform();
+            });
+            
+            // Mouse wheel zoom
+            svg.addEventListener('wheel', (e) => {
+                e.preventDefault();
+                const delta = e.deltaY > 0 ? 0.9 : 1.1;
+                chartScale = Math.max(0.3, Math.min(3, chartScale * delta));
+                updateTransform();
+            });
+        }
+        
+        function updateOrgChart() {
+            const metrics = {
+                awa: parseInt(sliders.awa.value),
+                kids: parseInt(sliders.kids.value),
+                students: parseInt(sliders.students.value),
+                youngAdult: parseInt(sliders.youngAdult.value),
+                groups: parseInt(sliders.groups.value),
+                studies: parseInt(sliders.studies.value),
+                services: parseInt(sliders.services.value),
+                care: parseInt(sliders.care.value),
+                guests: parseInt(sliders.guests.value),
+                cityHope: parseInt(sliders.cityHope.value)
+            };
+            
+            const positions = calculateStaffing(metrics);
+            
+            drawOrgChart(positions);
+            
+            const fteCount = positions.filter(p => p.type === 'FTE').length;
+            const pteCount = positions.filter(p => p.type === 'PTE').length;
+            
+            document.getElementById('totalFTE').textContent = fteCount;
+            document.getElementById('totalPTE').textContent = pteCount;
+            document.getElementById('totalStaff').textContent = fteCount + pteCount;
+        }
+        
+        Object.keys(sliders).forEach(key => {
+            sliders[key].addEventListener('input', (e) => {
+                values[key].textContent = e.target.value;
+                updateOrgChart();
+            });
+        });
+        
+        window.addEventListener('resize', updateOrgChart);
+        
+        setupChartInteraction();
+        updateOrgChart();
+    </script>
+</body>
+</html>
